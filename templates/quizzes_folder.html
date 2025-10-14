@@ -1,0 +1,328 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Quizzes in Folder | SchoolSync</title>
+  <link rel="stylesheet" href="{% static 'home/style.css' %}">
+  <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f7f9fc, #eef1f7);
+      font-family: "Inter", system-ui, Arial, sans-serif;
+      margin: 0;
+      color: #1a1a1a;
+    }
+
+    .hw-container {
+      max-width: 980px;
+      margin: 32px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    a {
+      color: #1d1b31;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    .hw-container h2 {
+      font-size: 1.6rem;
+      margin: 0;
+      color: #1d1b31;
+    }
+
+    .quiz-card {
+      background: #fff;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+      margin-bottom: 14px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .quiz-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.07);
+    }
+
+    .quiz-card strong {
+      font-size: 1.1rem;
+      color: #1a1a1a;
+    }
+
+    .small-btn {
+      background: #1d1b31;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+    }
+
+    .small-btn:hover {
+      background: #35325c;
+    }
+
+    .small-btn.primary {
+      background: #060606;
+    }
+
+    .small-btn.primary:hover {
+      background: #2e33c7;
+    }
+
+    #loading {
+      text-align: center;
+      margin: 20px 0;
+      color: #666;
+    }
+
+    /* Modal design */
+    #createModalBackdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+    }
+
+    #createModalBackdrop > div {
+      background: #fff;
+      padding: 22px;
+      border-radius: 12px;
+      width: 720px;
+      max-width: 95%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    input, textarea {
+      font-family: inherit;
+      font-size: 0.95rem;
+      border: 1px solid #e0e3eb;
+      border-radius: 6px;
+      padding: 8px;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #3a3fef;
+      outline: none;
+    }
+
+    .cq-question {
+      background: #f9f9fb;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    .cq-question strong {
+      color: #1d1b31;
+    }
+  </style>
+</head>
+
+<body data-current-user-id="{{ user.id|default:0 }}">
+  <!-- Sidebar (kept exactly as is) -->
+  <div class="sidebar">
+    <div class="logo-details">
+      <i class='bx bxl-c-plus-plus icon'></i>
+      <div class="logo_name">schoolsync</div>
+      <i class='bx bx-menu' id="btn" ></i>
+    </div>
+    <ul class="nav-list">
+      <li><i class="bx bx-search" style="display:none"></i><span class="tooltip">Search</span></li>
+      <li><a href="/dashboard/"><i class='bx bx-home'></i><span class="links_name">Home</span></a><span class="tooltip">Home</span></li>
+      <li><a href="/groups/"><i class='bx bx-group'></i><span class="links_name">Groups</span></a></li>
+      <li><a href="/homework/"><i class='bx bx-book'></i><span class="links_name">Homeworks</span></a></li>
+      <li style="position:relative">
+        <a href="#" id="notifBellBtn_qf" style="display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;">
+          <i class='bx bx-bell'></i><span class="links_name">Notifications</span>
+          <span id="notifBadge_qf" style="display:none;position:absolute;left:42px;top:-6px;background:#ef4444;color:#fff;border-radius:10px;padding:2px 6px;font-size:11px;font-weight:700;">0</span>
+        </a>
+      </li>
+      <li><a href="/quizzes/"><i class='bx bx-dice-5'></i><span class="links_name">Quizzes</span></a></li>
+      <li><a href="#"><i class='bx bx-calendar-alt'></i><span class="links_name">Schedule</span></a></li>
+      <li class="profile">
+        <div class="profile-details"><i class='bx bx-user'></i><div class="name_job"><div class="name">{{ username }}</div><div class="job">{{ user.school_year }}</div></div></div>
+        <a href="#" id="log_out" style="color:#fff">Logout</a>
+      </li>
+    </ul>
+  </div>
+
+  <section class="home-section">
+    <div class="text">Quizzes</div>
+    <div class="hw-container">
+      <a href="/quizzes/">← Back to folders</a>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;">
+        <div>
+          <h2 id="folderTitle">Quizzes</h2>
+          <div id="folderDesc" style="color:#666;margin-top:6px"></div>
+        </div>
+        <button id="openCreateQuiz" class="small-btn primary">+ Create Quiz</button>
+      </div>
+      <div id="loading">Loading quizzes…</div>
+      <div id="list"></div>
+    </div>
+  </section>
+  <script>
+  // folder id is stored in a hidden element to avoid template-in-script linting
+  (function(){ const m=document.createElement('div'); m.id='folderMeta'; m.style.display='none'; m.setAttribute('data-folder-id','{{ folder_id|default:0 }}'); document.body.appendChild(m); })();
+  const FOLDER_ID = parseInt(document.getElementById('folderMeta').dataset.folderId,10) || 0;
+    function showNotification(msg, type='info', t=4000){ const cId='__notif__'; let c=document.getElementById(cId); if(!c){ c=document.createElement('div'); c.id=cId; c.style.position='fixed'; c.style.top='20px'; c.style.right='20px'; c.style.zIndex='9999'; document.body.appendChild(c); } const el=document.createElement('div'); el.textContent=msg; el.style.padding='8px 12px'; el.style.borderRadius='6px'; el.style.marginTop='8px'; el.style.color='#fff'; el.style.background = (type==='error')? '#b83131' : (type==='success')? '#1d1b31' : '#111'; c.appendChild(el); setTimeout(()=>el.remove(),t); }
+
+    async function load(){
+      const l=document.getElementById('loading'); const list=document.getElementById('list'); l.style.display='block'; list.innerHTML='';
+      try{
+        // fetch folder metadata
+        const fRes = await fetch(`/api/quizzes/folders/${FOLDER_ID}`, { credentials:'same-origin' });
+        if(fRes.ok){
+          const fData = await fRes.json();
+          document.getElementById('folderTitle').textContent = fData.name || 'Quizzes';
+          document.getElementById('folderDesc').textContent = fData.description || '';
+          // hide create button if current user is not the folder owner
+          try{
+            const currentUser = parseInt(document.body.dataset.currentUserId || '0', 10);
+            if(!fData.created_by_id || fData.created_by_id !== currentUser){
+              const cb = document.getElementById('openCreateQuiz'); if(cb) cb.style.display = 'none';
+            }
+          }catch(e){ /* ignore */ }
+        }
+
+        // fetch quizzes for this folder
+        const r = await fetch(`/api/quizzes/folders/${FOLDER_ID}/quizzes`, { credentials: 'same-origin' });
+        if(!r.ok) throw new Error('Network');
+        const data = await r.json();
+        l.style.display='none';
+        if(!Array.isArray(data) || data.length === 0){ list.innerHTML='<div>No quizzes yet.</div>'; return }
+        data.forEach(q=>{
+          const el=document.createElement('div'); el.className='quiz-card';
+          el.innerHTML = `<strong>${q.title}</strong><div style="color:#666;margin-top:6px">Questions: ${q.num_questions||0}</div><div style="margin-top:8px"><a class="small-btn" href="/quizzes/${q.id}/take/">Take Quiz</a></div>`;
+          list.appendChild(el);
+        });
+      }catch(e){ l.textContent='Could not load quizzes'; showNotification('Could not load quizzes','error',5000); }
+    }
+
+    // --- Create Quiz modal ---
+    const csrftoken = (document.cookie.split(';').find(c=>c.trim().startsWith('csrftoken='))||'').split('=')[1]||'';
+    const modalHtml = `
+      <div id="createModalBackdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.36);display:none;align-items:center;justify-content:center;z-index:2000">
+        <div style="background:#fff;padding:16px;border-radius:10px;width:720px;max-width:94%;max-height:80vh;overflow:auto">
+          <h3>Create Quiz</h3>
+          <div style="margin-top:8px"><label style="font-weight:700">Title</label><input id="cqTitle" style="width:100%;padding:8px;border:1px solid #e6e9ee;border-radius:6px;margin-top:6px"></div>
+          <div id="questionsEditor" style="margin-top:12px"></div>
+          <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-start">
+            <button id="addQuestionBtn" class="small-btn">+ Add question</button>
+            <button id="cancelCreateQuiz" class="small-btn">Cancel</button>
+            <button id="submitCreateQuiz" class="small-btn primary">Create Quiz</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    function createQuestionEditor(qidx){
+      const div = document.createElement('div'); div.className='cq-question'; div.style.background='#fff'; div.style.padding='10px'; div.style.borderRadius='8px'; div.style.marginBottom='10px';
+      div.dataset.index = qidx;
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong>Question ${qidx+1}</strong>
+          <button class="removeQBtn small-btn" style="background:#fff;border:1px solid #ef4444;color:#ef4444">Remove</button>
+        </div>
+        <div style="margin-top:8px"><input class="qText" placeholder="Question text" style="width:100%;padding:8px;border:1px solid #e6e9ee;border-radius:6px"></div>
+        <div class="options" style="margin-top:8px"></div>
+        <div style="margin-top:8px;display:flex;gap:8px"><button class="addOptionBtn small-btn">+ Option</button></div>
+      `;
+      // handlers
+      div.querySelector('.removeQBtn').addEventListener('click', ()=>{ div.remove(); refreshQuestionIndexes(); });
+      const optsWrap = div.querySelector('.options');
+      function addOption(text=''){ const oi = document.createElement('div'); oi.style.marginTop='6px'; const idx = optsWrap.children.length; oi.innerHTML = `<label style="display:block"><input type="radio" name="correct_${qidx}" value="${idx}"> <input class="optText" placeholder="Option text" style="padding:6px;border:1px solid #e6e9ee;border-radius:6px;width:70%" value="${text}"> <button class="remOpt small-btn" style="margin-left:6px">Remove</button></label>`; optsWrap.appendChild(oi); oi.querySelector('.remOpt').addEventListener('click', ()=>{ oi.remove(); }); }
+      // starter options
+      addOption('Option 1'); addOption('Option 2');
+      div.querySelector('.addOptionBtn').addEventListener('click', (e)=>{ e.preventDefault(); addOption(''); });
+      return div;
+    }
+
+    function refreshQuestionIndexes(){ const editors = document.querySelectorAll('#questionsEditor .cq-question'); editors.forEach((el, i)=>{ el.querySelector('strong').textContent = `Question ${i+1}`; el.dataset.index = i; const radios = el.querySelectorAll('input[type=radio]'); radios.forEach((r, idx)=> r.name = `correct_${i}`); }); }
+
+    document.addEventListener('click', (e)=>{
+      if(e.target && e.target.id === 'openCreateQuiz'){
+        document.getElementById('createModalBackdrop').style.display='flex';
+        // reset editor
+        document.getElementById('cqTitle').value=''; const qe = document.getElementById('questionsEditor'); qe.innerHTML=''; qe.appendChild(createQuestionEditor(0));
+      }
+      if(e.target && e.target.id === 'cancelCreateQuiz'){
+        document.getElementById('createModalBackdrop').style.display='none';
+      }
+    });
+
+    document.getElementById('addQuestionBtn').addEventListener('click', (ev)=>{ ev.preventDefault(); const qe = document.getElementById('questionsEditor'); qe.appendChild(createQuestionEditor(qe.children.length)); refreshQuestionIndexes(); });
+
+    document.getElementById('submitCreateQuiz').addEventListener('click', async (ev)=>{
+      ev.preventDefault(); const title = document.getElementById('cqTitle').value.trim(); if(!title){ showNotification('Title required','error'); return }
+      const qe = document.getElementById('questionsEditor'); const questions = [];
+      for(const qEl of qe.querySelectorAll('.cq-question')){
+        const text = qEl.querySelector('.qText').value.trim(); if(!text){ showNotification('Each question needs text','error'); return }
+        const opts = []; let correct = null; const optEls = qEl.querySelectorAll('.options > div');
+        optEls.forEach((o, oi)=>{ const val = o.querySelector('.optText').value; opts.push(val); const radio = o.querySelector('input[type=radio]'); if(radio && radio.checked) correct = oi; });
+        if(opts.length < 2){ showNotification('Each question needs at least 2 options','error'); return }
+        if(correct === null) { showNotification('Please pick a correct option for each question','error'); return }
+        questions.push({ text, options: opts, correct });
+      }
+      try{
+        const res = await fetch('/api/quizzes', { method: 'POST', credentials:'same-origin', headers: { 'Content-Type':'application/json', 'X-CSRFToken': csrftoken }, body: JSON.stringify({ folder_id: FOLDER_ID, title, questions }) });
+        if(!res.ok){ let err=null; try{ err=await res.json(); }catch(e){ err=await res.text(); } throw new Error(err.detail||JSON.stringify(err)); }
+        const created = await res.json(); showNotification('Quiz created','success'); document.getElementById('createModalBackdrop').style.display='none'; await load();
+      }catch(err){ showNotification('Could not create quiz','error'); }
+    });
+    document.addEventListener('DOMContentLoaded', load);
+
+    // Sidebar toggle and logout (same as other pages)
+    const sidebar=document.querySelector(".sidebar"), closeBtn=document.querySelector("#btn"), searchBtn=document.querySelector(".bx-search");
+    if(closeBtn){ closeBtn.onclick=()=>{sidebar.classList.toggle("open"); closeBtn.classList.toggle("bx-menu-alt-right"); closeBtn.classList.toggle("bx-menu");} }
+    if(searchBtn) searchBtn.onclick=()=> closeBtn.onclick();
+    const logoutEl = document.getElementById('log_out');
+    if(logoutEl) logoutEl.onclick = async e => { e.preventDefault(); await fetch('/api/auth/logout',{method:'POST',credentials:'same-origin'}); window.location='/'; }
+
+    // notification container (ensure present)
+    if(!document.getElementById('notification-container')){
+      const nc = document.createElement('div'); nc.id='notification-container'; nc.style.position='fixed'; nc.style.top='20px'; nc.style.right='20px'; nc.style.zIndex='9999'; document.body.appendChild(nc);
+    }
+  </script>
+  <script>
+    // notification badge loader for this page
+    async function loadNotificationsQF(){
+      try{
+        const res = await fetch('/api/notifications', { credentials:'same-origin'});
+        if(!res.ok) return;
+        const data = await res.json();
+        const unread = data.filter(n=>!n.is_read).length;
+        const b = document.getElementById('notifBadge_qf');
+        if(!b) return;
+        if(unread>0){ b.style.display='inline-block'; b.textContent = unread>99? '99+' : String(unread);} else b.style.display='none';
+      }catch(e){ console.error(e); }
+    }
+    document.addEventListener('DOMContentLoaded', loadNotificationsQF);
+  </script>
+  </div>
+  </section>
+</body>
+</html>
