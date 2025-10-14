@@ -47,7 +47,6 @@ pip install -r requirements.txt
 # 4. Apply migrations and create a superuser
 ```bash
 python manage.py migrate
-```
 python manage.py createsuperuser
 ```
 # 5. Run the development server
@@ -56,40 +55,53 @@ python manage.py runserver
 ```
 🐧 Linux (Ubuntu / Debian)
 # 1. Clone the repository
+```bash
 git clone https://github.com/yourusername/schoolsync.git
 cd schoolsync
-
+```
 # 2. Create and activate a virtual environment
+```bash
 python3 -m venv venv
 source venv/bin/activate
-
+```
 # 3. Install dependencies
+```bash
 pip install -r requirements.txt
-
+```
 # 4. Apply migrations and create a superuser
+```bash
 python3 manage.py migrate
 python3 manage.py createsuperuser
-
+```
 # 5. Run the development server
+```bash
 python3 manage.py runserver
+```
 🍎 macOS
 # 1. Clone the repository
+```bash
 git clone https://github.com/yourusername/schoolsync.git
 cd schoolsync
-
+```
 # 2. Create and activate a virtual environment
+```bash
 python3 -m venv venv
 source venv/bin/activate
-
+```
 # 3. Install dependencies
+```bash
 pip install -r requirements.txt
-
+```
 # 4. Apply migrations and create a superuser
+```bash
 python3 manage.py migrate
 python3 manage.py createsuperuser
-
+```
 # 5. Run the development server
+```bash
 python3 manage.py runserver
+```
+
 
 
 
