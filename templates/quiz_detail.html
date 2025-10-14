@@ -1,0 +1,109 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Quiz Folder — SchoolSync</title>
+  <link rel="stylesheet" href="{% static 'home/style.css' %}">
+  <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--card:#fff;--bg:#F6F8FB;--brand:#1d1b31}
+    body{background:var(--bg);font-family:Inter,system-ui,Arial}
+    .hw-container{max-width:980px;margin:24px auto;padding:18px}
+    .header-row{display:flex;justify-content:space-between;align-items:center}
+    .quiz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:12px}
+    .quiz-card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.04)}
+    .small-btn{padding:8px 12px;border-radius:8px;border:1px solid #e6e9ee;background:#f9fafb;color:var(--brand)}
+    .small-btn.primary{background:var(--brand);color:#fff;border:none}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.36);display:none;align-items:center;justify-content:center}
+    .modal-backdrop.open{display:flex}
+    .modal{background:#fff;padding:16px;border-radius:10px;width:560px;max-width:96%}
+  </style>
+</head>
+<body data-current-user-id="{{ user.id|default:0 }}">
+  <div class="sidebar">{% comment %} sidebar omitted: reuse from other templates {% endcomment %}</div>
+  <section class="home-section">
+    <div class="text">Quizzes</div>
+    <div class="hw-container">
+      <div class="header-row">
+        <div>
+          <h2 id="folderName">Folder</h2>
+          <div id="folderDesc" style="color:#666;margin-top:6px"></div>
+        </div>
+        <div>
+          <button id="openCreateQuiz" class="small-btn primary">+ Create Quiz</button>
+        </div>
+      </div>
+
+      <div id="loading">Loading quizzes…</div>
+      <div id="quizGrid" class="quiz-grid" style="display:none"></div>
+      <div id="noQuizzes" style="display:none">No quizzes yet. Create one to get started.</div>
+    </div>
+  </section>
+
+  <!-- Create Quiz Modal -->
+  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog">
+      <h3>Create Quiz</h3>
+      <form id="createQuizForm">
+        <label>Title</label>
+        <input id="quizTitle" name="title" required style="width:100%;padding:8px;margin-top:6px;border:1px solid #e6e9ee;border-radius:6px">
+        <label style="margin-top:8px;display:block">Number of questions</label>
+        <input id="quizCount" type="number" min="1" value="3" style="width:120px;padding:8px;margin-top:6px;border:1px solid #e6e9ee;border-radius:6px">
+        <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" id="cancelCreate" class="small-btn">Cancel</button>
+          <button type="submit" class="small-btn primary">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="notification-container" style="position:fixed;top:20px;right:20px;z-index:9999"></div>
+
+  <script>
+    const csrftoken = (document.cookie.split(';').find(c=>c.trim().startsWith('csrftoken='))||'').split('=')[1]||'';
+    // folder id is stored in a hidden data attribute to avoid template-in-script linting
+    (function(){
+      const meta = document.createElement('div'); meta.id = 'folderMeta'; meta.style.display='none'; meta.setAttribute('data-folder-id', '{{ folder_id|default:0 }}'); document.body.appendChild(meta);
+    })();
+    const FOLDER_ID = parseInt(document.getElementById('folderMeta').dataset.folderId, 10) || 0;
+
+    function showNotification(msg, type='info', t=3500){ const c=document.getElementById('notification-container'); const el=document.createElement('div'); el.textContent=msg; el.style=(type==='error')?'background:#b83131;color:#fff;padding:8px 12px;border-radius:6px;margin-top:8px':(type==='success')?'background:#1d1b31;color:#fff;padding:8px 12px;border-radius:6px;margin-top:8px':'background:#333;color:#fff;padding:8px 12px;border-radius:6px;margin-top:8px'; c.appendChild(el); setTimeout(()=>el.remove(),t); }
+
+    async function loadFolder(){
+      const res = await fetch(`/api/quizzes/folders/${FOLDER_ID}`, {credentials:'same-origin'});
+      if(!res.ok){ showNotification('Could not load folder','error'); return }
+      const data = await res.json();
+      document.getElementById('folderName').textContent = data.name;
+      document.getElementById('folderDesc').textContent = data.description||'';
+    }
+
+    async function loadQuizzes(){
+      const loading = document.getElementById('loading'); const grid = document.getElementById('quizGrid'); const noq=document.getElementById('noQuizzes'); loading.style.display='block'; grid.style.display='none'; noq.style.display='none';
+      try{
+        const r = await fetch(`/api/quizzes/folders/${FOLDER_ID}/quizzes`, {credentials:'same-origin'});
+        if(!r.ok) throw new Error('Network');
+        const data = await r.json();
+        grid.innerHTML='';
+        if(Array.isArray(data) && data.length){ data.forEach(q=>{
+          const el = document.createElement('div'); el.className='quiz-card'; el.innerHTML = `<strong>${q.title}</strong><div style="color:#666;margin-top:6px">Questions: ${q.num_questions||0}</div><div style="margin-top:10px"><a class="small-btn" href="/quizzes/${q.id}/take/">Take Quiz</a></div>`; grid.appendChild(el);
+        }); grid.style.display='grid'; } else { noq.style.display='block'; }
+      }catch(e){ showNotification('Could not load quizzes','error') }
+      finally{ loading.style.display='none' }
+    }
+
+    // Modal handlers
+    const modalBackdrop = document.getElementById('modalBackdrop'); const openCreate = document.getElementById('openCreateQuiz'); const cancelCreate = document.getElementById('cancelCreate'); const createForm = document.getElementById('createQuizForm');
+    function openModal(){ modalBackdrop.classList.add('open'); modalBackdrop.setAttribute('aria-hidden','false'); document.getElementById('quizTitle').focus(); }
+    function closeModal(){ modalBackdrop.classList.remove('open'); modalBackdrop.setAttribute('aria-hidden','true'); createForm.reset(); }
+    if(openCreate) openCreate.onclick = (e)=>{ e.preventDefault(); openModal(); };
+    if(cancelCreate) cancelCreate.onclick = (e)=>{ e.preventDefault(); closeModal(); };
+    modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal(); });
+
+    createForm.onsubmit = async function(e){ e.preventDefault(); const title = document.getElementById('quizTitle').value.trim(); const count = parseInt(document.getElementById('quizCount').value,10)||0; if(!title){ showNotification('Title required','error'); return } const btn = createForm.querySelector('button.primary'); btn.disabled=true; try{ const body = { folder_id: FOLDER_ID, title, questions: [] }; for(let i=0;i<count;i++){ body.questions.push({ text: `Question ${i+1}`, options: ['A','B','C','D'], correct: 0 }) } const res = await fetch('/api/quizzes', { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/json', 'X-CSRFToken': csrftoken }, body: JSON.stringify(body) }); if(!res.ok){ let err=null; try{ err = await res.json() }catch(e){ err = await res.text() } throw new Error(err.detail||JSON.stringify(err)); } const created = await res.json(); closeModal(); showNotification('Quiz created','success'); await loadQuizzes(); }catch(err){ showNotification(err.message||'Could not create quiz','error',7000); } finally{ btn.disabled=false } };
+
+    document.addEventListener('DOMContentLoaded', ()=>{ loadFolder(); loadQuizzes(); });
+  </script>
+</body>
+</html>

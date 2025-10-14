@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="/static/login/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+
+  <body>
+    <!-- Notification container -->
+    <div id="notification-container" aria-live="polite" style="position:fixed;top:20px;right:20px;z-index:9999"></div>
+
+    <div class="wrapper">
+      <div class="title-text">
+        <div class="title login">Login Form</div>
+        <div class="title signup">Signup Form</div>
+      </div>
+
+      <div class="form-container">
+        <div class="slide-controls">
+          <input type="radio" name="slide" id="login" checked>
+          <input type="radio" name="slide" id="signup">
+          <label for="login" class="slide login">Login</label>
+          <label for="signup" class="slide signup">Signup</label>
+          <div class="slider-tab"></div>
+        </div>
+
+        <div class="form-inner">
+          <!-- LOGIN FORM -->
+          <form method="post" action="/" class="login" id="loginForm">
+            {% csrf_token %}
+            <div class="field">
+              <input name="email" type="email" placeholder="Email Address" required>
+            </div>
+            <div class="field">
+              <input id="login-password" name="password" type="password" placeholder="Password" required>
+              <button type="button" class="eye-btn" data-target="login-password" aria-label="Toggle password" style="margin-left:8px">
+                <svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="pass-link"><a href="#">Forgot password?</a></div>
+            <div class="field btn">
+              <div class="btn-layer"></div>
+              <input type="submit" value="Login">
+            </div>
+            <div class="signup-link">Not a member? <a href="">Signup now</a></div>
+          </form>
+
+          <!-- SIGNUP FORM -->
+          <form method="post" action="/api/auth/register" class="signup" id="signupForm">
+            {% csrf_token %}
+            <div class="field">
+              <input name="username" type="text" placeholder="Username" required>
+            </div>
+            <div class="field">
+              <input name="email" type="email" placeholder="Email Address" required>
+            </div>
+            <div class="field">
+              <input id="signup-password" name="password" type="password" placeholder="Password" required>
+              <button type="button" class="eye-btn" data-target="signup-password" aria-label="Toggle password" style="margin-left:8px">
+                <svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="field">
+              <input id="signup-password2" name="password2" type="password" placeholder="Confirm password" required>
+              <button type="button" class="eye-btn" data-target="signup-password2" aria-label="Toggle password" style="margin-left:8px">
+                <svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="field btn">
+              <div class="btn-layer"></div>
+              <input type="submit" value="Signup">
+            </div>
+          </form>
+
+          {% if error %}
+          <div style="color:red; text-align:center; margin-top:10px">{{ error }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // -------------------------------
+      // 1. Tab toggle between login/signup
+      // -------------------------------
+      const loginText = document.querySelector(".title-text .login");
+      const loginForm = document.querySelector("form.login");
+      const loginBtn = document.querySelector("label.login");
+      const signupBtn = document.querySelector("label.signup");
+      const signupLink = document.querySelector("form .signup-link a");
+      signupBtn.onclick = () => {
+        loginForm.style.marginLeft = "-50%";
+        loginText.style.marginLeft = "-50%";
+      };
+      loginBtn.onclick = () => {
+        loginForm.style.marginLeft = "0%";
+        loginText.style.marginLeft = "0%";
+      };
+      signupLink.onclick = () => {
+        signupBtn.click();
+        return false;
+      };
+
+      // -------------------------------
+      // 2. Notification helper
+      // -------------------------------
+      function showNotification(message, type='info', timeout=4000){
+        const container = document.getElementById('notification-container');
+        const el = document.createElement('div');
+        el.className = 'notif '+type;
+        el.style = 'background:#333;color:#fff;padding:10px 14px;border-radius:6px;margin-top:8px;box-shadow:0 4px 12px rgba(0,0,0,0.2);min-width:200px';
+        el.textContent = message;
+        container.appendChild(el);
+        setTimeout(()=>{
+          el.style.transition='opacity 0.3s';
+          el.style.opacity='0';
+          setTimeout(()=>el.remove(),300);
+        }, timeout);
+      }
+
+      // -------------------------------
+      // 3. Toggle password visibility
+      // -------------------------------
+      function setEyeIcon(btn, open=true){
+        const svgOpen = '<svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+        const svgClosed = '<svg class="icon-eye-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.06-6.1"/><path d="M1 1l22 22"/></svg>';
+        btn.innerHTML = open ? svgOpen : svgClosed;
+      }
+
+      document.querySelectorAll('.eye-btn').forEach(btn=>{
+        setEyeIcon(btn, true);
+        btn.addEventListener('click', ()=>{
+          const targetId = btn.getAttribute('data-target');
+          const inp = document.getElementById(targetId);
+          if(!inp) return;
+          const opening = inp.type === 'password';
+          inp.type = opening ? 'text' : 'password';
+          setEyeIcon(btn, !opening);
+        });
+      });
+
+      // -------------------------------
+      // 4. CSRF helper for AJAX
+      // -------------------------------
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+
+      // -------------------------------
+      // 5. Login form submit (normal POST)
+      // -------------------------------
+      document.getElementById('loginForm').addEventListener('submit', function(e){
+        showNotification('Signing in...', 'info', 1500);
+        // Allow default submission for Django authentication
+      });
+
+      // -------------------------------
+      // 6. Signup form submit (AJAX with CSRF)
+      // -------------------------------
+      document.getElementById('signupForm').addEventListener('submit', async function(e){
+        e.preventDefault();
+        const form = e.currentTarget;
+        const formData = new FormData(form);
+        const username = formData.get('username');
+        const email = formData.get('email');
+        const password = formData.get('password');
+        const password2 = formData.get('password2');
+        if(password !== password2){ alert('Passwords do not match'); return; }
+
+        const payload = {username, email, password};
+        const csrftoken = getCookie('csrftoken');
+
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if(res.ok){
+          showNotification('Account created. You can now login.', 'success');
+          document.querySelector('label.login').click();
+        } else {
+          let errText = 'Signup error';
+          try { const err = await res.json(); errText = JSON.stringify(err); } catch(e){ errText = await res.text().catch(()=>errText); }
+          showNotification(errText, 'error', 6000);
+        }
+      });
+    </script>
+  </body>
+</html>
