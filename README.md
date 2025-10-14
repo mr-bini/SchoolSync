@@ -1,8 +1,10 @@
 # 🏫 SchoolSync
 
-**SchoolSync** is a minimal Django + DRF project that connects your static frontend pages to a powerful backend API with **JWT authentication** using **SimpleJWT**.  
-It provides a clean and extendable foundation for building full-stack web applications with authentication, dashboards, and modular APIs.
-
+**SchoolSync**  is a web-based platform designed to help high school students:
+- 🔹 Organize study groups.
+- 🔹 Track homework and deadlines.
+- 🔹 Share notes with classmates.
+- 🔹 Play fun quizzes and challenges.
 ---
 
 ## ⚙️ Features
@@ -101,6 +103,7 @@ python3 manage.py createsuperuser
 ```bash
 python3 manage.py runserver
 ```
+
 
 
 
