@@ -36,7 +36,7 @@ git clone https://github.com/yourusername/schoolsync.git
 cd schoolsync
 ...
 # 2. Create and activate a virtual environment
-
+...
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 
