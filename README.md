@@ -34,9 +34,9 @@ Before you begin, make sure you have the following installed:
 ```bash
 git clone https://github.com/yourusername/schoolsync.git
 cd schoolsync
-...
-# 2. Create and activate a virtual environment
 
+# 2. Create and activate a virtual environment
+...
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 ...
@@ -87,6 +87,7 @@ python3 manage.py createsuperuser
 
 # 5. Run the development server
 python3 manage.py runserver
+
 
 
 
