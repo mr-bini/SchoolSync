@@ -56,7 +56,7 @@ python manage.py runserver
 🐧 Linux (Ubuntu / Debian)
 # 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/schoolsync.git
+git clone https://github.com/mr-bini/SchoolSync.git
 cd schoolsync
 ```
 # 2. Create and activate a virtual environment
@@ -80,7 +80,7 @@ python3 manage.py runserver
 🍎 macOS
 # 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/schoolsync.git
+git clone https://github.com/mr-bini/SchoolSync.git
 cd schoolsync
 ```
 # 2. Create and activate a virtual environment
@@ -101,6 +101,7 @@ python3 manage.py createsuperuser
 ```bash
 python3 manage.py runserver
 ```
+
 
 
 
