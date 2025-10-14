@@ -29,8 +29,9 @@ Before you begin, make sure you have the following installed:
 
 ### 🪟 Windows
 
-```bash
+
 # 1. Clone the repository
+```bash
 git clone https://github.com/yourusername/schoolsync.git
 cd schoolsync
 ```
@@ -84,4 +85,5 @@ python3 manage.py createsuperuser
 
 # 5. Run the development server
 python3 manage.py runserver
+
 
