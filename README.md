@@ -93,7 +93,7 @@ manage.py            → Project runner
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/SchoolSync.git
+git clone https://github.com/mr-bini/SchoolSync.git
 cd SchoolSync
 ```
 
@@ -270,4 +270,5 @@ schoolsync/
 💻 Full-Stack Developer | ALX Software Engineering Student
 🌍 Building **SchoolSync** to make studying smarter, together.
 📬 [GitHub](https://github.com/mr-bini) | [LinkedIn](https://www.linkedin.com/in/biniyam-wondimu-12620b327) | 
+
 
