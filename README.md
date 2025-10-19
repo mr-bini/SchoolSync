@@ -29,89 +29,35 @@ Before you begin, make sure you have the following installed:
 
 ## 🚀 Installation Guide
 
-### 🪟 Windows
-
-
-# 1. Clone the repository
+1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/mr-bini/SchoolSync.git
-cd schoolsync
+git clone https://github.com/Orel-y/HUlink.git
+cd HUlink
 ```
-# 2. Create and activate a virtual environment
+2️⃣ Create a Virtual Environment
 ```bash
 python -m venv venv
-.\venv\Scripts\Activate.ps1
+source venv/bin/activate   # Linux/macOS
+venv\Scripts\activate      # Windows
 ```
-# 3. Install dependencies
+3️⃣ Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
-# 4. Apply migrations and create a superuser
+4️⃣ Apply Migrations
 ```bash
+python manage.py makemigrations
 python manage.py migrate
+```
+5️⃣ Create a Superuser
+```bash
 python manage.py createsuperuser
 ```
-# 5. Run the development server
+6️⃣ Run the Development Server
 ```bash
 python manage.py runserver
 ```
-🐧 Linux (Ubuntu / Debian)
-# 1. Clone the repository
-```bash
-git clone https://github.com/mr-bini/SchoolSync.git
-cd schoolsync
-```
-# 2. Create and activate a virtual environment
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-# 3. Install dependencies
-```bash
-pip install -r requirements.txt
-```
-# 4. Apply migrations and create a superuser
-```bash
-python3 manage.py migrate
-python3 manage.py createsuperuser
-```
-# 5. Run the development server
-```bash
-python3 manage.py runserver
-```
-🍎 macOS
-# 1. Clone the repository
-```bash
-git clone https://github.com/mr-bini/SchoolSync.git
-cd schoolsync
-```
-# 2. Create and activate a virtual environment
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-# 3. Install dependencies
-```bash
-pip install -r requirements.txt
-```
-# 4. Apply migrations and create a superuser
-```bash
-python3 manage.py migrate
-python3 manage.py createsuperuser
-```
-# 5. Run the development server
-```bash
-python3 manage.py runserver
-```
-
-
-
-
-
-
-
-
-
+Now open http://127.0.0.1:8000/ to access HUlink.
 
 
 
