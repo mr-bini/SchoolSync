@@ -32,7 +32,7 @@ Before you begin, make sure you have the following installed:
 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/mr-bini/SchoolSync.git
-cd Schoolsync
+cd SchoolSync
 ```
 2️⃣ Create a Virtual Environment
 ```bash
@@ -58,6 +58,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 Now open http://127.0.0.1:8000/ to access Schoolsync.
+
 
 
 
