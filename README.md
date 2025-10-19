@@ -31,7 +31,7 @@ Before you begin, make sure you have the following installed:
 
 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/Orel-y/HUlink.git
+git clone https://github.com/mr-bini/SchoolSync.git
 cd HUlink
 ```
 2️⃣ Create a Virtual Environment
@@ -57,7 +57,8 @@ python manage.py createsuperuser
 ```bash
 python manage.py runserver
 ```
-Now open http://127.0.0.1:8000/ to access HUlink.
+Now open http://127.0.0.1:8000/ to access Schoolsync.
+
 
 
 
