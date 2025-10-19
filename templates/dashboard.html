@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard | SchoolSync</title>
+  <link rel="stylesheet" href="{% static 'home/style.css' %}">
+  <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --brand:#4b70e2;
+      --accent:#ffb703;
+      --bg:#f4f7fc;
+      --card:#fff;
+      --muted:#6b7280;
+      --success:#10b981;
+      --error:#ef4444;
+    }
+    body { font-family: Inter, sans-serif; margin:0; background: var(--bg); }
+
+    .home-section {
+      position: relative;
+      background: var(--bg);
+      min-height: 100vh;
+      width: calc(100% - 78px);
+      left: 78px;
+      transition: all 0.5s ease;
+      padding: 40px 30px;
+    }
+    .sidebar.open ~ .home-section { left:250px; width: calc(100% - 250px); }
+
+    .dashboard-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
+
+    .card {
+      background: var(--card);
+      border-radius:12px;
+      padding:20px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.06);
+    }
+    .card h3 { margin-top:0; font-size:1.2rem; color:#333; }
+    .card p { color:var(--muted); font-size:0.9rem; margin:4px 0; }
+    .card .count { font-size:1.6rem; font-weight:700; margin-top:10px; color:var(--brand); }
+
+    .shortcut-btn { display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:10px; background:#f3f4f6; text-decoration:none; color:#333; font-weight:600; transition:0.3s; }
+    .shortcut-btn:hover { background:var(--brand); color:#fff; }
+    .shortcut-btn i { font-size:1.4rem; }
+
+    .event-card, .activity-card {
+      background: var(--card);
+      border-left:5px solid var(--brand);
+      padding:16px 12px;
+      border-radius:12px;
+      box-shadow:0 4px 14px rgba(0,0,0,0.05);
+      display:flex; flex-direction:column; justify-content:space-between; transition: transform 0.2s;
+    }
+    .event-card:hover, .activity-card:hover { transform: translateY(-3px); }
+    .event-card h4, .activity-card h4 { margin:0 0 6px 0; font-size:1rem; color:#333; }
+    .event-card small, .activity-card small { font-size:0.85rem; color:var(--muted); }
+
+    @media(max-width:640px){
+      .dashboard-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo-details">
+      <i class='bx bxl-c-plus-plus icon'></i>
+      <div class="logo_name">SchoolSync</div>
+      <i class='bx bx-menu' id="btn" ></i>
+    </div>
+    <ul class="nav-list">
+      <li><a href="/dashboard/" class="active"><i class='bx bx-home'></i> <span class="links_name">Home</span></a></li>
+      <li><a href="/groups/"><i class='bx bx-group'></i> <span class="links_name">Groups</span></a></li>
+      <li><a href="/homework/"><i class='bx bx-book'></i> <span class="links_name">Homework</span></a></li>
+      <li><a href="/quizzes/"><i class='bx bx-dice-5'></i> <span class="links_name">Quizzes</span></a></li>
+      <li><a href="/schedule/"><i class='bx bx-calendar-alt'></i> <span class="links_name">Schedule</span></a></li>
+      <li class="profile">
+        <div class="profile-details">
+          <i class='bx bx-user'></i>
+          <div class="name_job">
+            <div class="name">{{ username }}</div>
+            <div class="job">{{ user.school_year }}</div>
+          </div>
+        </div>
+        <a href="#" id="log_out" style="color:#fff">Logout</a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Main Section -->
+  <section class="home-section">
+    <h2>Welcome, {{ username }}!</h2>
+    
+    <!-- Shortcuts -->
+    <div class="dashboard-grid">
+      <a href="/homework/" class="shortcut-btn"><i class='bx bx-book'></i> Homework</a>
+      <a href="/quizzes/" class="shortcut-btn"><i class='bx bx-dice-5'></i> Quizzes</a>
+      <a href="/groups/" class="shortcut-btn"><i class='bx bx-group'></i> Groups</a>
+      <a href="/schedule/" class="shortcut-btn"><i class='bx bx-calendar-alt'></i> Schedule</a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="dashboard-grid" style="margin-top:25px;">
+      <div class="card">
+        <h3>Total Homework</h3>
+        <p>Assignments assigned to you</p>
+        <div class="count" id="homeworkCount">0</div>
+      </div>
+      <div class="card">
+        <h3>Pending Quizzes</h3>
+        <p>Quizzes to complete</p>
+        <div class="count" id="quizCount">0</div>
+      </div>
+      <div class="card">
+        <h3>Active Groups</h3>
+        <p>Groups you are part of</p>
+        <div class="count" id="groupCount">0</div>
+      </div>
+    </div>
+
+    <!-- Upcoming Events -->
+    <h3 style="margin-top:30px;">Upcoming Events</h3>
+    <div class="dashboard-grid" id="upcomingEvents"></div>
+
+    <!-- Recent Activity -->
+    <h3 style="margin-top:30px;">Recent Activity</h3>
+    <div class="dashboard-grid" id="recentActivity"></div>
+  </section>
+
+  <script>
+    const apiSchedule = '/api/schedule/';
+    const apiHomework = '/api/homework/';
+    const apiQuizzes = '/api/quizzes/';
+    const apiGroups = '/api/groups/';
+    const csrftoken = (document.cookie.split(';').find(c=>c.trim().startsWith('csrftoken='))||'').split('=')[1]||'';
+
+    function showNotification(msg,type='info',t=3500){
+      let container = document.getElementById('notification-container');
+      if(!container){ container = document.createElement('div'); container.id='notification-container'; container.style.position='fixed'; container.style.top='18px'; container.style.right='18px'; container.style.zIndex='9999'; document.body.appendChild(container);}
+      const el = document.createElement('div'); el.textContent=msg;
+      el.style.padding='10px 14px'; el.style.borderRadius='8px'; el.style.marginTop='8px'; el.style.fontWeight='700';
+      el.style.boxShadow='0 6px 18px rgba(2,6,23,0.08)';
+      if(type==='success'){ el.style.background='linear-gradient(90deg,#10b981,#06b6d4)'; el.style.color='#fff'; }
+      else if(type==='error'){ el.style.background='#ef4444'; el.style.color='#fff'; }
+      else { el.style.background='#111827'; el.style.color='#fff'; }
+      container.appendChild(el); setTimeout(()=> el.remove(),t);
+    }
+
+    async function loadDashboard(){
+      try{
+        // Stats counts
+        const [hwRes, quizRes, groupRes] = await Promise.all([
+          fetch(apiHomework,{credentials:'same-origin'}),
+          fetch(apiQuizzes,{credentials:'same-origin'}),
+          fetch(apiGroups,{credentials:'same-origin'})
+        ]);
+        const hwData = await hwRes.json();
+        const quizData = await quizRes.json();
+        const groupData = await groupRes.json();
+        document.getElementById('homeworkCount').textContent = hwData.length || 0;
+        document.getElementById('quizCount').textContent = quizData.length || 0;
+        document.getElementById('groupCount').textContent = groupData.length || 0;
+
+        // Upcoming events
+        const evRes = await fetch(apiSchedule,{credentials:'same-origin'});
+        const events = await evRes.json();
+        const upcomingEl = document.getElementById('upcomingEvents'); upcomingEl.innerHTML='';
+        events.slice(0,5).forEach(ev=>{
+          const el = document.createElement('div'); el.className='event-card';
+          el.innerHTML=`<h4>${ev.title}</h4><small>${new Date(ev.datetime).toLocaleString()}</small>`;
+          upcomingEl.appendChild(el);
+        });
+
+        // Recent activity (from homework/quizzes)
+        const recentEl = document.getElementById('recentActivity'); recentEl.innerHTML='';
+        hwData.slice(-3).forEach(hw=>{
+          const el=document.createElement('div'); el.className='activity-card';
+          el.innerHTML=`<h4>Homework: ${hw.title}</h4><small>${hw.due_date?new Date(hw.due_date).toLocaleDateString():'No due date'}</small>`;
+          recentEl.appendChild(el);
+        });
+        quizData.slice(-3).forEach(qz=>{
+          const el=document.createElement('div'); el.className='activity-card';
+          el.innerHTML=`<h4>Quiz: ${qz.title}</h4><small>${qz.due_date?new Date(qz.due_date).toLocaleDateString():'No due date'}</small>`;
+          recentEl.appendChild(el);
+        });
+      }catch(err){ showNotification('Could not load dashboard','error'); console.error(err); }
+    }
+
+    // Sidebar toggle
+    const sidebar=document.querySelector('.sidebar'); const closeBtn=document.querySelector('#btn');
+    if(closeBtn){ closeBtn.addEventListener('click',()=>{ sidebar.classList.toggle('open'); if(sidebar.classList.contains('open')) closeBtn.classList.replace('bx-menu','bx-menu-alt-right'); else closeBtn.classList.replace('bx-menu-alt-right','bx-menu'); }); }
+
+    document.getElementById('log_out').addEventListener('click', async function(e){
+      e.preventDefault();
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      await fetch('/api/auth/logout',{method:'POST',credentials:'same-origin'});
+      window.location.href='/';
+    });
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>

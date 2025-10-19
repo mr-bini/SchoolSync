@@ -1,0 +1,286 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Take Quiz</title>
+  <link rel="stylesheet" href="{% static 'home/style.css' %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      background: #F6F8FB;
+      font-family: Inter, system-ui, Arial;
+    }
+
+    .hw-container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 30px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+
+    .hw-container:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2#quizTitle {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #1d1b31;
+    }
+
+    #quizDesc {
+      color: #666;
+      margin-bottom: 18px;
+      font-size: 15px;
+    }
+
+    .question {
+      background: #fdfdfd;
+      border: 1px solid #eaeaea;
+      padding: 18px 16px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .question:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .question strong {
+      color: #1d1b31;
+    }
+
+    label {
+      display: block;
+      padding: 8px 10px;
+      margin-top: 6px;
+      border-radius: 8px;
+      transition: background 0.2s ease;
+      cursor: pointer;
+    }
+
+    label:hover {
+      background: #f3f4f8;
+    }
+
+    input[type="radio"] {
+      margin-right: 8px;
+      accent-color: #1d1b31;
+    }
+
+    .small-btn {
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid #e6e9ee;
+      background: #f9fafb;
+      color: #111;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .small-btn.primary {
+      background: #1d1b31;
+      color: #fff;
+      border: none;
+    }
+
+    .small-btn.primary:hover {
+      background: #2b284a;
+      transform: scale(1.03);
+    }
+
+    .small-btn:active {
+      transform: scale(0.97);
+    }
+
+    #result {
+      background: #f0f4ff;
+      border-left: 4px solid #1d1b31;
+      color: #1d1b31;
+      padding: 14px 16px;
+      margin-top: 16px;
+      border-radius: 10px;
+      font-weight: 500;
+      display: none;
+    }
+
+    a.back-link {
+      text-decoration: none;
+      color: #1d1b31;
+      font-weight: 500;
+      display: inline-block;
+      margin-bottom: 18px;
+      transition: color 0.2s ease;
+    }
+
+    a.back-link:hover {
+      color: #2b284a;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body data-current-user-id="{{ user.id|default:0 }}">
+
+  <div class="sidebar">
+    <div class="logo-details">
+      <i class='bx bxl-c-plus-plus icon'></i>
+      <div class="logo_name">schoolsync</div>
+      <i class='bx bx-menu' id="btn" ></i>
+    </div>
+    <ul class="nav-list">
+      <li><i class="bx bx-search" style="display:none"></i><span class="tooltip">Search</span></li>
+      <li><a href="/dashboard/"><i class='bx bx-home'></i><span class="links_name">Home</span></a><span class="tooltip">Home</span></li>
+      <li><a href="/groups/"><i class='bx bx-group'></i><span class="links_name">Groups</span></a></li>
+      <li><a href="/homework/"><i class='bx bx-book'></i><span class="links_name">Homeworks</span></a></li>
+     <li>
+       <a href="/quizzes/">
+         <i class='bx  bx-dice-5'  ></i> 
+         <span class="links_name">Quizzes</span>
+       </a>
+       <span class="tooltip">Quize</span>
+     </li>
+     <li>
+       <a href="/schedule/">
+        <i class='bx  bx-calendar-alt'  ></i> 
+         <span class="links_name">schedule</span>
+       </a>
+       <span class="tooltip">schedule</span>
+     </li>
+       <li style="position:relative">
+         <a href="#" id="notifBellBtn_qt">
+           <i class='bx  bx-bell'  ></i> 
+           <span class="links_name">notification</span>
+           <span id="notifBadge_qt" style="display:none;position:absolute;left:36px;top:-6px;background:#ef4444;color:#fff;border-radius:10px;padding:2px 6px;font-size:11px;font-weight:700;">0</span>
+         </a>
+         <span class="tooltip">notification</span>
+       </li>
+      <li class="profile">
+        <div class="profile-details"><i class='bx bx-user'></i><div class="name_job"><div class="name">{{ username }}</div><div class="job">{{ user.school_year }}</div></div></div>
+        <a href="#" id="log_out" style="color:#fff">Logout</a>
+      </li>
+    </ul>
+  </div>
+
+  <section class="home-section">
+    <div class="text">Quizzes</div>
+    <div class="hw-container">
+      <a href="/quizzes/" class="back-link">← Back</a>
+      <h2 id="quizTitle">Quiz</h2>
+      <div id="quizDesc"></div>
+
+      <form id="quizForm">
+        <div id="questions"></div>
+        <div style="margin-top:20px;text-align:right;">
+          <button type="submit" class="small-btn primary">Submit Answers</button>
+        </div>
+      </form>
+
+      <div id="result"></div>
+    </div>
+  </section>
+
+  <script>
+    (function(){
+      const m=document.createElement('div');
+      m.id='quizMeta';
+      m.style.display='none';
+      m.setAttribute('data-quiz-id','{{ quiz_id|default:0 }}');
+      document.body.appendChild(m);
+    })();
+
+    const QUIZ_ID=parseInt(document.getElementById('quizMeta').dataset.quizId,10)||0;
+    const csrftoken=(document.cookie.split(';').find(c=>c.trim().startsWith('csrftoken='))||'').split('=')[1]||'';
+
+    async function load(){
+      const res=await fetch(`/api/quizzes/${QUIZ_ID}`,{credentials:'same-origin'});
+      if(!res.ok){document.getElementById('quizTitle').textContent='Could not load quiz';return;}
+      const data=await res.json();
+      document.getElementById('quizTitle').textContent=data.title;
+      document.getElementById('quizDesc').textContent=data.description||'';
+
+      let questions=[];
+      try{
+        const c=JSON.parse(data.content||'null');
+        if(c && Array.isArray(c.questions)) questions=c.questions;
+      }catch(e){}
+
+      const qWrap=document.getElementById('questions');
+      qWrap.innerHTML='';
+      questions.forEach((q,idx)=>{
+        const div=document.createElement('div');
+        div.className='question';
+        div.innerHTML=`<div><strong>Q${idx+1}.</strong> ${q.text||''}</div>`;
+        if(Array.isArray(q.options)){
+          const opts=document.createElement('div');
+          opts.style.marginTop='8px';
+          q.options.forEach((opt,i)=>{
+            const id=`q${idx}_opt${i}`;
+            const label=document.createElement('label');
+            label.innerHTML=`<input type="radio" name="q${idx}" value="${i}" id="${id}"> ${opt}`;
+            opts.appendChild(label);
+          });
+          div.appendChild(opts);
+        }
+        qWrap.appendChild(div);
+      });
+    }
+
+    document.getElementById('quizForm').addEventListener('submit',async function(e){
+      e.preventDefault();
+      const form=new FormData(e.target);
+      const answers=[];
+      for(const key of form.keys()){
+        if(key.startsWith('q')){
+          const idx=parseInt(key.slice(1),10);
+          answers[idx]=form.get(key);
+        }
+      }
+      try{
+        const res=await fetch(`/api/quizzes/${QUIZ_ID}/attempt`,{
+          method:'POST',
+          credentials:'same-origin',
+          headers:{'Content-Type':'application/json','X-CSRFToken':csrftoken},
+          body:JSON.stringify({answers})
+        });
+        if(!res.ok) throw new Error('Submit failed');
+        const data=await res.json();
+        const result=document.getElementById('result');
+        result.style.display='block';
+        result.textContent=`🎯 Your Score: ${data.score||'N/A'}`;
+      }catch(err){alert('Could not submit attempt');}
+    });
+
+    document.addEventListener('DOMContentLoaded',load);
+
+    // Sidebar toggle + logout
+    const sidebar=document.querySelector(".sidebar"), closeBtn=document.querySelector("#btn");
+    if(closeBtn){closeBtn.onclick=()=>{sidebar.classList.toggle("open"); closeBtn.classList.toggle("bx-menu-alt-right"); closeBtn.classList.toggle("bx-menu");}}
+
+    const logoutEl=document.getElementById('log_out');
+    if(logoutEl) logoutEl.onclick=async e=>{e.preventDefault(); await fetch('/api/auth/logout',{method:'POST',credentials:'same-origin'}); window.location='/';};
+  </script>
+  <script>
+    async function loadNotificationsQT(){
+      try{
+        const res = await fetch('/api/notifications', { credentials:'same-origin' });
+        if(!res.ok) return;
+        const data = await res.json();
+        const unread = data.filter(n=>!n.is_read).length;
+        const b = document.getElementById('notifBadge_qt'); if(!b) return;
+        if(unread>0){ b.style.display='inline-block'; b.textContent = unread>99? '99+' : String(unread);} else b.style.display='none';
+      }catch(e){ console.error(e); }
+    }
+    document.addEventListener('DOMContentLoaded', ()=>{ loadNotificationsQT(); });
+  </script>
+</body>
+</html>

@@ -1,0 +1,509 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Groups | SchoolSync</title>
+  <link rel="stylesheet" href="{% static 'home/style.css' %}">
+  <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+      :root{
+      --card: #fff;
+      --bg: #F6F8FB;
+      --muted: #6B7280;
+      --brand: #1d1b31;
+      --accent: #EF4444;
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(2,6,23,0.06);
+    }
+
+      /* small layout for groups: left list, right messages stuff ;-)*/
+      .groups-container{ display:flex; gap:80px; padding:80px }
+  .groups-panel{ width:380px; background:#fff; padding:10px; border-radius:8px }
+      .messages-panel{ flex:1; background:#fff; padding:12px; border-radius:8px; max-height:70vh; overflow:auto }
+
+      /* Responsive: stack panels on small screens .. ;-) */
+      @media (max-width: 760px){
+        .groups-container{ flex-direction:column; gap:12px; padding:12px }
+        .groups-panel{ width:100%; order:1 }
+        .messages-panel{ width:100%; order:2; max-height:50vh }
+  .group-item{ padding:8px 6px }
+        .group-item > div{ display:flex; flex-direction:row; align-items:center; gap:8px }
+        .group-item .owner-pill{ margin-right:4px }
+  .btn{ padding:5px 8px; font-size:13px }
+  .owner-pill{ font-size:10px; padding:2px 6px }
+        .message{ max-width:100% }
+        .message.own{ margin-left:0; margin-right:0 }
+        .messages-panel{ overflow:auto }
+        #createBox input{ width:100% }
+        /* make controls wrap nicely .. :-o*/
+        .groups-panel div[style*="display:flex"]{ flex-wrap:wrap }
+      }
+    .group-item{ padding:6px 6px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; font-size:14px }
+  .group-item.selected{ background:#e9f0ff; border-left:4px solid #1d1b31; }
+    .btn{ background:#1d1b31;color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px }
+    /* layout: left column (name) can shrink; right column (controls) shouldn't wrap on desktop ;-() */
+    .group-item > div { display:flex; align-items:center }
+    .group-item > div:first-child { flex: 1 1 auto; min-width:0 }
+    .group-item > div:first-child strong { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .group-item > div:last-child { flex: 0 0 auto; gap:6px; white-space:nowrap }
+
+  /* highlight active sidebar item */
+  .sidebar.open li.active a{ background: #1d1b31; }
+  .sidebar .nav-list a.active { background: #1d1b31; color: #fff; border-radius: 8px; padding: 8px 10px; display: inline-flex; align-items: center; gap:8px }
+  .sidebar .nav-list li.active .links_name, .sidebar .nav-list a.active .links_name { color: #ffffff !important }
+  .sidebar .nav-list a.active i { color: #fff }
+
+  /* message bubble styles */
+  .message{ margin-bottom:8px; max-width:70%; padding:6px 8px; border-radius:10px; background:#f2f4fb; font-size:14px }
+  .message.own{ margin-left:auto; background:#1d1b31; color:#fff; }
+  .message .msg-meta{ font-size:10px; color:#666; margin-bottom:6px }
+  .message.own .msg-meta{ color:rgba(255,255,255,0.8) }
+  .message .msg-actions{ margin-top:6px; display:flex; gap:6px }
+  .msg-action-btn{ background:transparent;border:1px solid rgba(0,0,0,0.08);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:12px }
+  .msg-action-btn.delete{ border-color:#b83131;color:#b83131 }
+  /* owner pill */
+  .owner-pill{ display:inline-block; padding:3px 6px; border-radius:12px; background:#e6e6e6; color:#6b6b6b; font-size:11px; margin-right:6px; vertical-align:middle }
+    </style>
+  </head>
+  <body data-current-user-id="{{ user.id|default:0 }}">
+   <div class="sidebar">
+    <div class="logo-details">
+      <i class='bx bxl-c-plus-plus icon'></i>
+        <div class="logo_name">schoolsync</div>
+        <i class='bx bx-menu' id="btn" ></i>
+    </div>
+    <ul class="nav-list">
+     <li>
+       <a href="/dashboard/">
+         <i class='bx  bx-home'  ></i> 
+         <span class="links_name">Home</span>
+       <li class="{% if '/groups' in request.path %}active{% endif %}">
+        <a href="/groups/">
+          <i class='bx bx-group'></i>
+          <span class="links_name">Groups</span>
+        </a>
+         <span class="tooltip">Group</span>
+      </li>
+<li>
+       <a href="/homework/">
+         <i class='bx  bx-book'  ></i> 
+         <span class="links_name">Homeworks</span>
+       </a>
+       <span class="tooltip">Homework</span>
+     </li>
+     <li>
+       <a href="/quizzes/">
+         <i class='bx  bx-dice-5'  ></i> 
+         <span class="links_name">Quizzes</span>
+       </a>
+       <span class="tooltip">Quize</span>
+     </li>
+     <li>
+       <a href="/schedule/">
+        <i class='bx  bx-calendar-alt'  ></i> 
+         <span class="links_name">schedule</span>
+       </a>
+       <span class="tooltip">schedule</span>
+     </li>
+     <li style="position:relative">
+        <a href="#" id="notifBellBtn" style="display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;">
+          <i class='bx bx-bell'></i>
+          <span class="links_name">Notifications</span>
+          <span id="notifBadge" style="display:none;position:absolute;left:34px;top:-4px;background:#ef4444;color:#fff;border-radius:10px;padding:2px 6px;font-size:11px;font-weight:700;">0</span>
+        </a>
+        <div id="notifDropdown" style="display:none;position:absolute;left:0;top:46px;z-index:999;background:var(--card);box-shadow:0 6px 20px rgba(0, 0, 0, 0.12);width:320px;border-radius:8px;padding:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>Notifications</strong><button id="markAllRead" class="btn small">Mark all read</button></div>
+          <div id="notifList" style="max-height:300px;overflow:auto;"></div>
+          <div id="notifEmpty" style="color:var(--muted);text-align:center;padding:10px;display:none">No notifications</div>
+        </div>
+      </li>
+      <li class="profile">
+        <div class="profile-details">
+          <i class='bx bx-user'></i>
+          <div class="name_job">
+            <div class="name">{{ username }}</div>
+            <div class="job">{{ user.school_year }}</div>
+          </div>
+        </div>
+         <a href="#" id="log_out" style="color:#fff">Logout</a>
+     </li>
+    </ul>
+  </div>
+    <section class="home-section">
+      <div class="text">Groups</div>
+      <div class="groups-container">
+        <div class="groups-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3 id="panelTitle">Groups</h3>
+            <button id="toggleCreate" class="btn" title="Create">+</button>
+          </div>
+          <div id="createBox" style="margin-top:8px;display:none">
+            <form id="createGroupForm">
+              <input name="name" placeholder="Group name" required style="width:100%;margin-bottom:8px">
+              <input name="subject" placeholder="Subject (optional)" style="width:100%;margin-bottom:8px">
+              <div style="display:flex;gap:8px"><button class="btn" type="submit">Create</button><button id="cancelCreate" type="button" class="btn" style="background:#777">Cancel</button></div>
+            </form>
+          </div>
+          <h3 style="margin-top:12px">Available Groups</h3>
+          <div id="groupsList"></div>
+        </div>
+        <div class="messages-panel">
+          <h3 id="currentGroupTitle">Choose a group</h3>
+          <div id="currentGroupInfo" style="font-size:13px;color:#666;margin-bottom:8px"></div>
+          <div id="messagesArea">No group selected</div>
+          <form id="msgForm" style="margin-top:10px; display:none">
+            <input name="text" placeholder="Your message" required style="width:80%">
+            <button class="btn" type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <div id="notification-container" style="position:fixed;top:20px;right:20px;z-index:9999"></div>
+
+    <script>
+      // CSRF helper (reads csrftoken cookie)
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+      }
+      const csrftoken = getCookie('csrftoken');
+      function showNotification(msg, type='info', t=3500){
+        const c = document.getElementById('notification-container');
+        const el = document.createElement('div'); el.textContent = msg; el.style = 'background:#333;color:#fff;padding:8px 12px;border-radius:6px;margin-top:8px';
+        c.appendChild(el); setTimeout(()=>el.remove(), t);
+      }
+
+  let selectedGroupId = null;
+  const CURRENT_USER_ID = parseInt(document.body.dataset.currentUserId || '0');
+
+      async function fetchGroups(){
+        try{
+          const res = await fetch('/api/groups', {credentials:'same-origin'});
+          if(!res.ok) throw new Error('Failed to fetch groups');
+          const groups = await res.json();
+          const container = document.getElementById('groupsList'); container.innerHTML = '';
+          groups.forEach(g=>{
+            const div = document.createElement('div'); div.className='group-item'; div.dataset.id = g.id;
+            const left = document.createElement('div'); left.innerHTML = `<strong>${g.name}</strong><div style="font-size:12px;padding-left:10px;color:#666">${g.subject||'—'}</div>`;
+            const right = document.createElement('div');
+            // Owner label -> small gray 'own' pill
+            if(g.is_owner){
+              const ownerLabel = document.createElement('span'); ownerLabel.className='owner-pill'; ownerLabel.textContent='own'; right.appendChild(ownerLabel);
+            }
+            // Joined state (join or leave)
+            let joinBtn = document.createElement('button'); joinBtn.className='btn join-btn'; joinBtn.dataset.id = g.id;
+            if(g.is_member){
+              if(g.is_owner){
+                  // owner: hide the join button entirely so only the owner-pill shows
+                  joinBtn.textContent='';
+                  joinBtn.disabled = true;
+                  joinBtn.style.display = 'none';
+              } else { joinBtn.textContent='Leave'; joinBtn.classList.add('leave-btn'); }
+            } else { joinBtn.textContent='Join'; }
+            const openBtn = document.createElement('button'); openBtn.className='btn open-btn'; openBtn.textContent='Open'; openBtn.style.marginLeft='8px'; openBtn.dataset.id = g.id;
+            right.appendChild(joinBtn); right.appendChild(openBtn);
+            // Delete for owner
+            if(g.is_owner){ const del = document.createElement('button'); del.className='btn'; del.textContent='Delete'; del.style.marginLeft='8px'; del.style.background='#b83131'; del.dataset.id = g.id; right.appendChild(del); del.addEventListener('click', onDelete); }
+            div.appendChild(left); div.appendChild(right);
+            container.appendChild(div);
+          });
+          // restore selection if any
+          if(selectedGroupId){
+            document.querySelectorAll('.group-item').forEach(it=>{ if(it.dataset.id==String(selectedGroupId)){ it.classList.add('selected'); } else { it.classList.remove('selected'); } });
+          }
+          document.querySelectorAll('.join-btn').forEach(b=> b.addEventListener('click', onJoin));
+          document.querySelectorAll('.leave-btn').forEach(b=> b.addEventListener('click', onLeave));
+          document.querySelectorAll('.open-btn').forEach(b=> b.addEventListener('click', e=> loadMessages(e.currentTarget.dataset.id)));
+          // left list selection
+          document.querySelectorAll('.group-item').forEach(item=> item.addEventListener('click', function(e){
+            // ignore clicks on buttons
+            if(e.target.tagName.toLowerCase()==='button') return;
+            // toggle selected class
+            document.querySelectorAll('.group-item').forEach(x=> x.classList.remove('selected'));
+            this.classList.add('selected');
+            const gid = this.dataset.id; loadMessages(gid);
+          }));
+        }catch(err){ console.error(err); showNotification('Could not load groups','error'); }
+      }
+
+      // toggle create box
+      document.getElementById('toggleCreate').addEventListener('click', function(){ const b = document.getElementById('createBox'); b.style.display = b.style.display === 'none' ? 'block' : 'none'; });
+      document.getElementById('cancelCreate').addEventListener('click', function(){ document.getElementById('createBox').style.display='none'; });
+
+      async function onDelete(e){
+        e.stopPropagation(); const id = e.currentTarget.dataset.id;
+        if(!confirm('Delete this group?')) return;
+        try{
+          const r = await fetch(`/api/groups/${id}/delete`, {method:'DELETE', credentials:'same-origin', headers:{'X-CSRFToken': csrftoken}});
+          if(!r.ok){ const txt = await r.text(); showNotification('Delete failed: '+txt,'error'); return; }
+          showNotification('Group deleted','success'); fetchGroups(); document.getElementById('messagesArea').innerHTML='No group selected';
+          if(selectedGroupId && String(selectedGroupId) === String(id)){
+            selectedGroupId = null;
+            document.getElementById('currentGroupTitle').textContent = 'Choose a group';
+            document.getElementById('currentGroupInfo').textContent = '';
+          }
+        }catch(err){ showNotification('Delete failed','error'); }
+      }
+
+      async function onJoin(e){
+        const id = e.currentTarget.dataset.id;
+        try{
+          const res = await fetch(`/api/groups/${id}/join`, {method:'POST', credentials:'same-origin', headers:{'X-CSRFToken': csrftoken}});
+          if(!res.ok){ const txt = await res.text(); showNotification('Join failed: '+txt,'error'); return; }
+          const group = await res.json();
+          showNotification('Joined '+group.name,'success');
+          // auto-open
+          selectedGroupId = group.id;
+          await loadMessages(group.id);
+          fetchGroups();
+        }catch(err){ console.error(err); showNotification('Join failed','error'); }
+      }
+
+      async function onLeave(e){
+        const id = e.currentTarget.dataset.id;
+        if(!confirm('Leave this group?')) return;
+        try{
+          const res = await fetch(`/api/groups/${id}/leave`, {method:'POST', credentials:'same-origin', headers:{'X-CSRFToken': csrftoken}});
+          if(!res.ok){ const txt = await res.text(); showNotification('Leave failed: '+txt,'error'); return; }
+          showNotification('Left group','success');
+          if(selectedGroupId && String(selectedGroupId) === String(id)){
+            document.getElementById('messagesArea').innerHTML = 'No group selected';
+            selectedGroupId = null;
+          }
+          fetchGroups();
+        }catch(err){ showNotification('Leave failed','error'); }
+      }
+
+      async function loadMessages(groupId){
+        try{
+          const res = await fetch(`/api/groups/${groupId}/messages`, {credentials:'same-origin'});
+          if(!res.ok){ const txt = await res.text(); showNotification('Cannot open messages: '+txt,'error'); return; }
+          const msgs = await res.json();
+          selectedGroupId = groupId;
+          document.getElementById('currentGroupTitle').textContent = 'Group messages';
+          // set current group info (find name/subject/owner from rendered list)
+          const el = document.querySelector(`.group-item[data-id="${groupId}"]`);
+          if(el){
+            const name = el.querySelector('strong') ? el.querySelector('strong').textContent : '';
+            document.getElementById('currentGroupInfo').textContent = name;
+            // update selected class on left
+            document.querySelectorAll('.group-item').forEach(x=> x.classList.remove('selected'));
+            el.classList.add('selected');
+          }
+          const area = document.getElementById('messagesArea'); area.innerHTML = '';
+          msgs.forEach(m=>{
+            const d = document.createElement('div'); d.className='message' + (m.author_id===CURRENT_USER_ID? ' own':'');
+            const meta = document.createElement('div'); meta.className='msg-meta'; meta.textContent = `${m.author.username} • ${new Date(m.timestamp).toLocaleString()}`;
+            const body = document.createElement('div'); body.className='msg-body'; body.textContent = m.text;
+            d.appendChild(meta); d.appendChild(body);
+            // actions for own messages
+            if(m.author_id===CURRENT_USER_ID){
+              const actions = document.createElement('div'); actions.className='msg-actions';
+              const editBtn = document.createElement('button'); editBtn.className='msg-action-btn edit'; editBtn.textContent='Edit';
+              const delBtn = document.createElement('button'); delBtn.className='msg-action-btn delete'; delBtn.textContent='Delete';
+              actions.appendChild(editBtn); actions.appendChild(delBtn);
+              d.appendChild(actions);
+              editBtn.addEventListener('click', ()=> startEditMessage(m.id, body));
+              delBtn.addEventListener('click', ()=> deleteMessage(m.id));
+            }
+            area.appendChild(d);
+          });
+          const form = document.getElementById('msgForm'); form.style.display='block';
+          form.onsubmit = async function(ev){ ev.preventDefault(); const fd = new FormData(form); const text = fd.get('text');
+            const r = await fetch(`/api/groups/${groupId}/messages`, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRFToken': csrftoken}, body: JSON.stringify({text})});
+            if(!r.ok){ showNotification('Send failed','error'); return; }
+            form.reset(); await loadMessages(groupId);
+          }
+        }catch(err){ console.error(err); showNotification('Failed to load messages','error'); }
+      }
+
+      // Create group: append created group to the list and auto-open it so user doesn't need to refresh
+      document.getElementById('createGroupForm').addEventListener('submit', async function(e){
+        e.preventDefault(); const fd = new FormData(e.currentTarget); const name = fd.get('name'); const subject = fd.get('subject');
+        try{
+          const r = await fetch('/api/groups', {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRFToken': csrftoken}, body: JSON.stringify({name, subject})});
+          if(!r.ok){ const txt = await r.text(); showNotification('Create failed: '+txt,'error'); return; }
+          const created = await r.json();
+          showNotification('Group created','success');
+          e.currentTarget.reset();
+          // Refresh the authoritative groups list to keep button states/layout consistent,
+          // then auto-open the newly created group.
+          await fetchGroups();
+          selectedGroupId = created.id;
+          await loadMessages(created.id);
+          // hide create box
+          document.getElementById('createBox').style.display='none';
+        }catch(err){ console.error(err); showNotification('Create failed','error'); }
+      });
+
+      // Helper: build and prepend a group DOM element from group JSON (same structure used in fetchGroups)
+      function prependGroupToList(g){
+        const container = document.getElementById('groupsList');
+        const div = document.createElement('div'); div.className='group-item'; div.dataset.id = g.id;
+        const left = document.createElement('div'); left.innerHTML = `<strong>${g.name}</strong><div style="font-size:12px;color:#666">${g.subject||'—'}</div>`;
+        const right = document.createElement('div');
+  if(g.is_owner){ const ownerLabel = document.createElement('span'); ownerLabel.className='owner-pill'; ownerLabel.textContent='own'; right.appendChild(ownerLabel); }
+  let joinBtn = document.createElement('button'); joinBtn.className='btn join-btn'; joinBtn.dataset.id = g.id;
+  if(g.is_member){ if(g.is_owner){ joinBtn.textContent=''; joinBtn.disabled = true; joinBtn.style.display = 'none'; } else { joinBtn.textContent='Leave'; joinBtn.classList.add('leave-btn'); } } else { joinBtn.textContent='Join'; }
+        const openBtn = document.createElement('button'); openBtn.className='btn open-btn'; openBtn.textContent='Open'; openBtn.style.marginLeft='8px'; openBtn.dataset.id = g.id;
+        right.appendChild(joinBtn); right.appendChild(openBtn);
+        if(g.is_owner){ const del = document.createElement('button'); del.className='btn'; del.textContent='Delete'; del.style.marginLeft='8px'; del.style.background='#b83131'; del.dataset.id = g.id; right.appendChild(del); del.addEventListener('click', onDelete); }
+        div.appendChild(left); div.appendChild(right);
+        // Prepend to top
+        if(container.firstChild) container.insertBefore(div, container.firstChild); else container.appendChild(div);
+        // wire events
+        joinBtn.addEventListener('click', onJoin);
+        if(joinBtn.classList.contains('leave-btn')) joinBtn.addEventListener('click', onLeave);
+        openBtn.addEventListener('click', e=> loadMessages(e.currentTarget.dataset.id));
+        div.addEventListener('click', function(e){ if(e.target.tagName.toLowerCase()==='button') return; document.querySelectorAll('.group-item').forEach(x=> x.classList.remove('selected')); this.classList.add('selected'); const gid = this.dataset.id; loadMessages(gid); });
+      }
+
+      async function deleteMessage(msgId){
+        if(!confirm('Delete this message?')) return;
+        try{
+          const r = await fetch(`/api/messages/${msgId}`, {method:'DELETE', credentials:'same-origin', headers:{'X-CSRFToken': csrftoken}});
+          if(!r.ok){ showNotification('Delete failed','error'); return; }
+          showNotification('Message deleted','success');
+          if(selectedGroupId) await loadMessages(selectedGroupId);
+        }catch(err){ showNotification('Delete failed','error'); }
+      }
+
+      function startEditMessage(msgId, bodyEl){
+        const orig = bodyEl.textContent;
+        const input = document.createElement('input'); input.type='text'; input.value = orig; input.style.width='80%';
+        const save = document.createElement('button'); save.className='msg-action-btn'; save.textContent='Save';
+        const cancel = document.createElement('button'); cancel.className='msg-action-btn'; cancel.textContent='Cancel';
+        const container = document.createElement('div'); container.appendChild(input); container.appendChild(save); container.appendChild(cancel);
+        bodyEl.replaceWith(container);
+        cancel.addEventListener('click', ()=>{ container.replaceWith(bodyEl); });
+        save.addEventListener('click', async ()=>{
+          const newText = input.value.trim(); if(!newText){ showNotification('Message cannot be empty','error'); return; }
+          try{
+            const r = await fetch(`/api/messages/${msgId}`, {method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRFToken': csrftoken}, body: JSON.stringify({text:newText})});
+            if(!r.ok){ showNotification('Edit failed','error'); return; }
+            const updated = await r.json();
+            const newBody = document.createElement('div'); newBody.className='msg-body'; newBody.textContent = updated.text;
+            container.replaceWith(newBody);
+          }catch(err){ showNotification('Edit failed','error'); }
+        });
+      }
+
+      // logout handler (fallback)
+      // replaced below with direct listener and sidebar toggle
+
+      fetchGroups();
+    </script>
+  <script>
+  let sidebar = document.querySelector(".sidebar");
+  let closeBtn = document.querySelector("#btn");
+  let searchBtn = document.querySelector(".bx-search");
+  if(closeBtn){
+    closeBtn.addEventListener("click", ()=>{
+      sidebar.classList.toggle("open");
+      menuBtnChange();//calling the function(optional)
+    });
+  }
+  if(searchBtn){
+    searchBtn.addEventListener("click", ()=>{ // Sidebar open when you click on the search icon
+      sidebar.classList.toggle("open");
+      menuBtnChange(); //calling the function(optional)
+    });
+  }
+  function menuBtnChange() {
+   if(sidebar.classList.contains("open")){
+     closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");//replacing the icons class
+   }else {
+     closeBtn.classList.replace("bx-menu-alt-right","bx-menu");//replacing the icons class
+   }
+  }
+
+  // logout handler (direct)
+  const logoutEl = document.getElementById('log_out');
+  if(logoutEl){
+    logoutEl.addEventListener('click', async function(e){
+      e.preventDefault();
+      await fetch('/api/auth/logout', {method:'POST', credentials:'same-origin', headers:{'X-CSRFToken': csrftoken}});
+      window.location.href = '/';
+    });
+  }
+  // Highlight active sidebar link based on current path
+  (function(){
+    const path = location.pathname.replace(/\/+$/,'') || '/';
+    const links = document.querySelectorAll('.nav-list a');
+    links.forEach(a=>{
+      const href = a.getAttribute('href') || '';
+      const norm = href.replace(/\/+$/,'') || '/';
+      if(norm === path || (norm !== '/' && path.startsWith(norm))){
+        a.classList.add('active'); const li = a.closest('li'); if(li) li.classList.add('active');
+      }
+    });
+  })();
+  </script>
+  <script>
+    async function loadNotificationsGR(){
+      try{ const res = await fetch('/api/notifications', { credentials:'same-origin' }); if(!res.ok) return; const data = await res.json(); const unread = data.filter(n=>!n.is_read).length; const b=document.getElementById('notifBadge_gr'); if(!b) return; if(unread>0){ b.style.display='inline-block'; b.textContent = unread>99? '99+' : String(unread);} else b.style.display='none'; }catch(e){ console.error(e); }
+    }
+    document.addEventListener('DOMContentLoaded', loadNotificationsGR);
+  </script>
+    <script>
+    // Notifications: fetch and render badge/dropdown
+    const notifApi = '/api/notifications';
+    async function loadNotifications(){
+      try{
+        const res = await fetch(notifApi, { credentials: 'same-origin' });
+        if(!res.ok) throw new Error('Failed to load notifications');
+        const data = await res.json();
+        const unread = data.filter(n=>!n.is_read).length;
+        const badge = document.getElementById('notifBadge');
+        if(unread>0){ badge.style.display='inline-block'; badge.textContent = unread>99? '99+' : String(unread); }
+        else { badge.style.display='none'; }
+        const list = document.getElementById('notifList'); list.innerHTML='';
+        if(!data || data.length===0){ document.getElementById('notifEmpty').style.display='block'; return; } else document.getElementById('notifEmpty').style.display='none';
+        data.forEach(n=>{
+          const item = document.createElement('div');
+          item.style.padding='8px'; item.style.borderBottom='1px solid #eef2f6'; item.style.display='flex'; item.style.justifyContent='space-between'; item.style.alignItems='center';
+          item.innerHTML = `<div style="flex:1"><div style="font-weight:700">${escapeHtml(n.message)}</div><div style="font-size:12px;color:var(--muted)">${new Date(n.created_at).toLocaleString()}</div></div>`;
+          const right = document.createElement('div'); right.style.marginLeft='8px';
+          const mark = document.createElement('button'); mark.className='btn small'; mark.textContent = n.is_read? 'Read' : 'Mark';
+          mark.onclick = async ()=>{
+            if(n.is_read) return; // no-op
+            const r = await fetch(`/api/notifications/${n.id}/read`, { method:'POST', credentials:'same-origin', headers:{ 'X-CSRFToken': (document.cookie.split(';').find(c=>c.trim().startsWith('csrftoken='))||'').split('=')[1]||'' } });
+            if(r.ok){ n.is_read = true; mark.textContent='Read'; loadNotifications(); }
+            else showNotification('Could not mark notification','error');
+          };
+          right.appendChild(mark);
+          item.appendChild(right);
+          list.appendChild(item);
+        });
+      }catch(e){ console.error(e); }
+    }
+
+    document.getElementById('notifBellBtn').addEventListener('click', (e)=>{
+      e.preventDefault(); const d = document.getElementById('notifDropdown'); d.style.display = d.style.display==='none' || d.style.display===''? 'block' : 'none'; if(d.style.display==='block') loadNotifications();
+    });
+
+    document.getElementById('markAllRead').addEventListener('click', async (e)=>{
+      e.preventDefault();
+      try{
+        const r = await fetch('/api/notifications/mark_all_read', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': (document.cookie.split(';').find(c=>c.trim().startsWith('csrftoken='))||'').split('=')[1]||'' } });
+        if(r.ok) loadNotifications(); else showNotification('Could not mark all read','error');
+      }catch(err){ console.error(err); }
+    });
+
+    // load on start to populate badge
+    loadNotifications();
+  </script>
+  </body>
+</html>
