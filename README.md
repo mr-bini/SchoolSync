@@ -59,6 +59,17 @@ python manage.py runserver
 ```
 Now open http://127.0.0.1:8000/ to access Schoolsync.
 
+🧭 Roadmap (Next Steps)
+Feature 	Description 	Status
+Announcements 	Staff post updates, events, and info 	🟢 Implemented
+Comments 	Users comment on posts 	🟢 Implemented
+Petitions 	Students submit issues or requests 	🟢 Implemented
+Discipline Management 	Report & track student behavior 	⚪ Planned / partial
+Frontend (React) 	User-friendly UI 	⚪ Planned
+Dockerization 	Deployment setup 	⚪ Planned
+👨‍💻 Author
+
+Yoseph Wondimu 🎓 Computer Science Student, Hawassa University 💡 Aspiring System Architect | Backend Developer 📬 Building HUlink to bridge students and staff through technology.
 
 
 
