@@ -60,7 +60,9 @@ python manage.py runserver
 Now open http://127.0.0.1:8000/ to access Schoolsync.
 
 👨‍💻 Author
+```
 Biniyam Wondimu, Highschool student 💡 Aspiring System Architect | Backend Developer 📬 Building SchoolSync to Highschool students.
+```
 
 
 
